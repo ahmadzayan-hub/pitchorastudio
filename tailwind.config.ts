@@ -1,0 +1,105 @@
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  content: ["./src/**/*.{ts,tsx,js,jsx,mdx}"],
+  darkMode: "class",
+  safelist: [
+    "animate-stagger-1","animate-stagger-2","animate-stagger-3","animate-stagger-4","animate-stagger-5",
+    "animate-fade-up","animate-slide-right","animate-scale-in","animate-float","animate-float-slow",
+    "animate-gradient-x","animate-glow-pulse","animate-shimmer","animate-bounce-soft","animate-wave",
+    "stat-card-blue","stat-card-amber","stat-card-purple","stat-card-emerald",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          50:  "#eef6ff", 100: "#dbeafe", 200: "#bfdbfe", 300: "#93c5fd",
+          400: "#60a5fa", 500: "#3b82f6", 600: "#2563eb", 700: "#1d4ed8",
+          800: "#1e40af", 900: "#1e3a8a", 950: "#172554",
+        },
+        navy: {
+          50:  "#f0f4ff", 100: "#dde5ff", 200: "#c2cfff", 300: "#9baeff",
+          400: "#7080fb", 500: "#4f56f5", 600: "#3d3deb", 700: "#2f2ecf",
+          800: "#2726a7", 900: "#252584", 950: "#16164d",
+        },
+        teal: {
+          50: "#f0fdfa", 100: "#ccfbf1", 200: "#99f6e4", 300: "#5eead4",
+          400: "#2dd4bf", 500: "#14b8a6", 600: "#0d9488", 700: "#0f766e",
+          800: "#115e59", 900: "#134e4a", 950: "#042f2e",
+        },
+        gold: {
+          50: "#fffbeb", 100: "#fef3c7", 200: "#fde68a", 300: "#fcd34d",
+          400: "#fbbf24", 500: "#f59e0b", 600: "#d97706", 700: "#b45309",
+          800: "#92400e", 900: "#78350f",
+        },
+      },
+      fontFamily: {
+        sans:   ["Inter", "Segoe UI", "system-ui", "sans-serif"],
+        arabic: ["IBM Plex Sans Arabic", "Noto Sans Arabic", "sans-serif"],
+        mono:   ["JetBrains Mono", "Fira Code", "monospace"],
+      },
+      borderRadius: {
+        "2xl": "1rem", "3xl": "1.5rem", "4xl": "2rem",
+      },
+      boxShadow: {
+        card:          "0 1px 3px 0 rgba(0,0,0,.08), 0 1px 2px -1px rgba(0,0,0,.06)",
+        "card-hover":  "0 8px 30px 0 rgba(0,0,0,.12), 0 2px 8px -2px rgba(0,0,0,.08)",
+        "card-lg":     "0 20px 60px 0 rgba(0,0,0,.12)",
+        glow:          "0 0 30px rgba(59,130,246,0.4)",
+        "glow-teal":   "0 0 30px rgba(20,184,166,0.4)",
+        "glow-purple": "0 0 30px rgba(168,85,247,0.4)",
+        "glow-amber":  "0 0 30px rgba(245,158,11,0.4)",
+        glass:         "0 8px 32px 0 rgba(31,38,135,0.18), inset 0 1px 0 rgba(255,255,255,0.2)",
+        "glass-dark":  "0 8px 32px 0 rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
+        float:         "0 25px 50px -12px rgba(0,0,0,0.25)",
+        "inner-glow":  "inset 0 0 20px rgba(59,130,246,0.1)",
+      },
+      animation: {
+        "fade-in":    "fadeIn .3s ease-out",
+        "fade-up":    "fadeUp .4s ease-out",
+        "slide-in":   "slideIn .3s ease-out",
+        "slide-up":   "slideUp .45s ease-out",
+        "slide-right":"slideRight .35s ease-out",
+        "scale-in":   "scaleIn .25s cubic-bezier(0.34,1.56,0.64,1)",
+        "pulse-soft": "pulseSoft 2.5s ease-in-out infinite",
+        "bounce-soft":"bounceSoft 2.5s ease-in-out infinite",
+        "float":      "float 5s ease-in-out infinite",
+        "float-slow": "float 7s ease-in-out infinite",
+        "float-fast": "float 3s ease-in-out infinite",
+        "shimmer":    "shimmer 2.5s linear infinite",
+        "gradient-x": "gradientX 8s ease infinite",
+        "spin-slow":  "spin 10s linear infinite",
+        "glow-pulse": "glowPulse 2s ease-in-out infinite",
+        "wave":       "wave 1.5s ease-in-out infinite",
+        "stagger-1":  "fadeUp .4s .05s ease-out both",
+        "stagger-2":  "fadeUp .4s .1s ease-out both",
+        "stagger-3":  "fadeUp .4s .15s ease-out both",
+        "stagger-4":  "fadeUp .4s .2s ease-out both",
+        "stagger-5":  "fadeUp .4s .25s ease-out both",
+      },
+      keyframes: {
+        fadeIn:     { from: { opacity: "0" }, to: { opacity: "1" } },
+        fadeUp:     { from: { opacity: "0", transform: "translateY(18px)" }, to: { opacity: "1", transform: "translateY(0)" } },
+        slideIn:    { from: { opacity: "0", transform: "translateY(-8px)" }, to: { opacity: "1", transform: "translateY(0)" } },
+        slideUp:    { from: { opacity: "0", transform: "translateY(28px)" }, to: { opacity: "1", transform: "translateY(0)" } },
+        slideRight: { from: { opacity: "0", transform: "translateX(-20px)" }, to: { opacity: "1", transform: "translateX(0)" } },
+        scaleIn:    { from: { opacity: "0", transform: "scale(0.9)" }, to: { opacity: "1", transform: "scale(1)" } },
+        pulseSoft:  { "0%,100%": { opacity: "1" }, "50%": { opacity: ".55" } },
+        bounceSoft: { "0%,100%": { transform: "translateY(0)" }, "50%": { transform: "translateY(-8px)" } },
+        float:      { "0%,100%": { transform: "translateY(0px) rotate(0deg)" }, "33%": { transform: "translateY(-10px) rotate(1deg)" }, "66%": { transform: "translateY(-6px) rotate(-1deg)" } },
+        shimmer:    { from: { backgroundPosition: "-200% 0" }, to: { backgroundPosition: "200% 0" } },
+        gradientX:  { "0%,100%": { backgroundPosition: "0% 50%" }, "50%": { backgroundPosition: "100% 50%" } },
+        glowPulse:  { "0%,100%": { boxShadow: "0 0 20px rgba(59,130,246,0.3)" }, "50%": { boxShadow: "0 0 50px rgba(59,130,246,0.6)" } },
+        wave:       { "0%,100%": { transform: "rotate(0deg)" }, "25%": { transform: "rotate(10deg)" }, "75%": { transform: "rotate(-10deg)" } },
+      },
+      transitionTimingFunction: {
+        spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        smooth: "cubic-bezier(0.4, 0, 0.2, 1)",
+        snappy: "cubic-bezier(0.2, 0, 0, 1)",
+      },
+    },
+  },
+  plugins: [],
+};
+
+export default config;

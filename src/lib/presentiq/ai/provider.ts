@@ -1,0 +1,189 @@
+/**
+ * Model provider abstraction.
+ *
+ * The orchestrator never talks to an SDK directly. It calls
+ * `provider.complete(...)` or `provider.embed(...)`. This lets us:
+ *   - swap providers per-tenant (confidentiality routing).
+ *   - run unit tests with the deterministic mock provider.
+ *   - cache outputs by canonical input hash.
+ */
+
+import type { ConfidentialityLevel } from "../types";
+
+export type CompletionRequest = {
+  systemPrompt: string;
+  userPrompt: string;
+  responseFormat?: "json" | "text";
+  temperature?: number;
+  maxTokens?: number;
+  metadata?: Record<string, unknown>;
+};
+
+export type CompletionResult = {
+  text: string;
+  usage?: { input_tokens: number; output_tokens: number };
+  model: string;
+  provider: string;
+};
+
+export type EmbedResult = { vector: number[]; model: string; dim: number };
+
+export interface ModelProvider {
+  name: string;
+  enterpriseSafe: boolean;
+  complete(req: CompletionRequest): Promise<CompletionResult>;
+  embed(text: string): Promise<EmbedResult>;
+}
+
+// ---------------------------------------------------------------------
+// Mock provider (always available, deterministic)
+// ---------------------------------------------------------------------
+
+export class MockProvider implements ModelProvider {
+  name = "mock";
+  enterpriseSafe = true;
+
+  async complete(req: CompletionRequest): Promise<CompletionResult> {
+    const text =
+      req.responseFormat === "json"
+        ? JSON.stringify(buildMockJson(req))
+        : `MOCK: ${req.userPrompt.slice(0, 200)}`;
+    return {
+      text,
+      usage: { input_tokens: req.userPrompt.length / 4, output_tokens: text.length / 4 },
+      model: "mock-1",
+      provider: "mock",
+    };
+  }
+
+  async embed(text: string): Promise<EmbedResult> {
+    // Deterministic 1536-dim pseudo-embedding using a simple hash spread.
+    const vec = new Array(1536).fill(0);
+    let h = 5381;
+    for (const ch of text) h = ((h << 5) + h) ^ ch.charCodeAt(0);
+    for (let i = 0; i < 1536; i++) {
+      h = (h * 1664525 + 1013904223) >>> 0;
+      vec[i] = ((h & 0xffff) / 0xffff) * 2 - 1;
+    }
+    return { vector: vec, model: "mock-embed", dim: 1536 };
+  }
+}
+
+function buildMockJson(req: CompletionRequest): unknown {
+  // Returns a shape that matches the most common JSON contracts in the
+  // orchestrator — useful for local dev when no real provider is configured.
+  if (req.systemPrompt.includes("BRIEF_AGENT")) {
+    return {
+      title: "Q3 Steering Committee",
+      audience: "Executive Director",
+      objective: "Decision",
+      decision_required: "Approve plan",
+      key_message: "Approve Option 2",
+      missing_data: [],
+    };
+  }
+  if (req.systemPrompt.includes("EVIDENCE_AGENT")) {
+    return { items: [] };
+  }
+  if (req.systemPrompt.includes("STRATEGY_AGENT") || req.systemPrompt.includes("STORY_AGENT")) {
+    return {
+      narrative: { hook: "", problem: "", insight: "", solution: "", impact: "", recommendation: "", decision: "" },
+    };
+  }
+  if (req.systemPrompt.includes("ARCHITECT_AGENT")) {
+    return { slides: [] };
+  }
+  if (req.systemPrompt.includes("COPYWRITER_AGENT")) {
+    return { slides: [] };
+  }
+  if (req.systemPrompt.includes("VISUAL_AGENT")) {
+    return { slides: [] };
+  }
+  if (req.systemPrompt.includes("RTL_AGENT") || req.systemPrompt.includes("TRANSLATION_AGENT")) {
+    return { slides: [] };
+  }
+  return {};
+}
+
+// ---------------------------------------------------------------------
+// Anthropic provider (production)
+// ---------------------------------------------------------------------
+
+export class AnthropicProvider implements ModelProvider {
+  name = "anthropic";
+  enterpriseSafe = true;
+  private readonly apiKey: string;
+  private readonly model: string;
+  private readonly embedFallback: ModelProvider;
+
+  constructor(opts: { apiKey: string; model?: string; embedFallback?: ModelProvider }) {
+    this.apiKey = opts.apiKey;
+    this.model = opts.model ?? "claude-sonnet-4-6";
+    this.embedFallback = opts.embedFallback ?? new MockProvider();
+  }
+
+  async complete(req: CompletionRequest): Promise<CompletionResult> {
+    const url = "https://api.anthropic.com/v1/messages";
+    const body = {
+      model: this.model,
+      max_tokens: req.maxTokens ?? 4096,
+      temperature: req.temperature ?? 0.4,
+      system: req.systemPrompt,
+      messages: [{ role: "user", content: req.userPrompt }],
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "x-api-key": this.apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      throw new Error(`anthropic_error_${res.status}: ${errText.slice(0, 200)}`);
+    }
+    const data = (await res.json()) as {
+      content: { type: string; text?: string }[];
+      usage?: { input_tokens: number; output_tokens: number };
+    };
+    const text = data.content.filter((c) => c.type === "text").map((c) => c.text ?? "").join("\n");
+    return {
+      text,
+      usage: data.usage,
+      model: this.model,
+      provider: "anthropic",
+    };
+  }
+
+  async embed(text: string): Promise<EmbedResult> {
+    // Anthropic does not currently expose a public embeddings endpoint of its own.
+    // We fall back to the configured embedding provider (default: mock).
+    return this.embedFallback.embed(text);
+  }
+}
+
+// ---------------------------------------------------------------------
+// Resolver: picks the right provider for a confidentiality tier.
+// ---------------------------------------------------------------------
+
+export type ProviderResolverOptions = {
+  preferred?: "anthropic" | "mock";
+  apiKey?: string;
+  allowed?: string[]; // organisation-allowed providers
+  confidentiality?: ConfidentialityLevel;
+};
+
+export function resolveProvider(opts: ProviderResolverOptions = {}): ModelProvider {
+  const preferred = opts.preferred ?? (opts.apiKey ? "anthropic" : "mock");
+  const allowed = opts.allowed ?? ["anthropic", "mock"];
+
+  if (preferred === "anthropic" && allowed.includes("anthropic") && opts.apiKey) {
+    return new AnthropicProvider({ apiKey: opts.apiKey });
+  }
+  if (allowed.includes("mock")) return new MockProvider();
+  throw new Error("provider_disallowed");
+}

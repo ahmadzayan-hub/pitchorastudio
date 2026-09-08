@@ -1,0 +1,25 @@
+node_modules/
+.next/
+out/
+dist/
+build/
+.DS_Store
+tsconfig.tsbuildinfo
+
+# env
+.env
+.env*.local
+
+# logs
+*.log
+npm-debug.log*
+
+# editor
+.vscode/
+.idea/
+
+# Claude Code internal (sub-agent worktrees, session state)
+.claude/
+
+# extension build
+extension/dist/

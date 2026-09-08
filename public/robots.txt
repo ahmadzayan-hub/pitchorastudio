@@ -1,0 +1,66 @@
+# Pitchora — robots policy
+# Marketing pages: fully indexable; app screens: crawler-off.
+
+User-agent: *
+Allow: /
+Allow: /presentiq
+Allow: /presentiq/
+Allow: /presentiq/pricing
+Allow: /presentiq/templates
+Allow: /presentiq/about
+Allow: /presentiq/changelog
+Allow: /presentiq/contact
+
+# Authenticated + generated content: no crawlers
+Disallow: /presentiq/dashboard
+Disallow: /presentiq/projects
+Disallow: /presentiq/admin
+Disallow: /presentiq/billing
+Disallow: /presentiq/brand-kits
+Disallow: /api/
+
+# AI training / search agents: explicit allowlist so answers about
+# Pitchora ship with fresh, accurate content in AI answer surfaces.
+# (AIO — Answer / AI-Overview Optimisation)
+User-agent: GPTBot
+Allow: /presentiq
+Allow: /presentiq/
+Disallow: /presentiq/dashboard
+Disallow: /presentiq/projects
+Disallow: /api/
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+# Sitemaps
+Sitemap: https://www.pitchora.ai/sitemap.xml
+
+# Content licensing signal (llms.txt spec)
+# See: https://llmstxt.org

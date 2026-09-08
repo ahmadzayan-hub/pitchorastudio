@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Prompt Orchestrator — Live Demo</title>
+<meta name="description" content="Turn rough ideas into perfectly engineered prompts. Free SaaS built on Next.js + Supabase + Ollama + Vercel." />
+<style>
+  :root {
+    --bg: #0b1020;
+    --bg-2: #0f172a;
+    --card: #111a33;
+    --card-2: #0d1530;
+    --line: #1f2a4a;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --brand: #6366f1;
+    --brand-2: #8b5cf6;
+    --accent: #22d3ee;
+    --good: #10b981;
+    --warn: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(1200px 600px at 80% -10%, rgba(139,92,246,.18), transparent 70%),
+                radial-gradient(900px 500px at -10% 30%, rgba(34,211,238,.12), transparent 70%),
+                var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  header {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(10px);
+    background: rgba(11,16,32,.7);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav {
+    max-width: 1100px; margin: 0 auto; padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .brand .logo {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    box-shadow: 0 6px 20px rgba(99,102,241,.4);
+  }
+  .nav a { color: var(--muted); margin-left: 18px; font-size: 14px; }
+  .nav a:hover { color: var(--text); text-decoration: none; }
+  .nav .cta {
+    background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    color: #fff; padding: 8px 14px; border-radius: 8px;
+    margin-left: 18px;
+  }
+
+  section { max-width: 1100px; margin: 0 auto; padding: 64px 20px; }
+  h1, h2, h3 { color: #fff; letter-spacing: -0.01em; }
+  h1 { font-size: clamp(34px, 5vw, 56px); line-height: 1.05; margin: 0 0 18px; }
+  h2 { font-size: clamp(24px, 3vw, 34px); margin: 0 0 14px; }
+  .muted { color: var(--muted); }
+  .pill {
+    display: inline-block; padding: 4px 10px; border-radius: 999px;
+    background: rgba(99,102,241,.12); color: #c4b5fd;
+    font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  }
+
+  /* HERO */
+  .hero {
+    display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px;
+    align-items: center; padding-top: 80px; padding-bottom: 40px;
+  }
+  @media (max-width: 880px) { .hero { grid-template-columns: 1fr; padding-top: 40px; } }
+  .hero p { font-size: 18px; color: var(--muted); max-width: 56ch; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 22px; }
+  .badge {
+    background: var(--card); border: 1px solid var(--line);
+    padding: 6px 10px; border-radius: 8px; font-size: 12px; color: var(--muted);
+  }
+  .cta-row { display: flex; gap: 10px; margin-top: 26px; flex-wrap: wrap; }
+  .btn {
+    border: 0; cursor: pointer; padding: 12px 18px; border-radius: 10px;
+    font-weight: 600; font-size: 14px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    color: #fff;
+  }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-ghost {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--line);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* HERO MOCK */
+  .mock {
+    background: linear-gradient(180deg, var(--card), var(--card-2));
+    border: 1px solid var(--line);
+    border-radius: 16px; padding: 18px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,.5), 0 0 0 1px rgba(139,92,246,.05);
+  }
+  .mock-head { display: flex; gap: 6px; margin-bottom: 14px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #1e293b; }
+  .dot.r { background: #ef4444; } .dot.y { background: #eab308; } .dot.g { background: #22c55e; }
+  .mock textarea, .mock select, .mock input {
+    width: 100%; background: #0a112a; color: var(--text);
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font: inherit; font-size: 14px;
+  }
+  .mock textarea { min-height: 90px; resize: vertical; }
+  .mock pre {
+    background: #060a1a; border: 1px solid var(--line); color: #cbd5e1;
+    padding: 12px; border-radius: 8px; white-space: pre-wrap; max-height: 320px;
+    overflow: auto; font-size: 13px;
+  }
+  .row { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  .row .grow { flex: 1; }
+  .qa-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+  .qa { background: #0a112a; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .qa label { font-size: 13px; color: #cbd5e1; }
+  .qa .why { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .qa input { margin-top: 6px; font-size: 13px; }
+  .step-tag {
+    display: inline-block; padding: 2px 8px; font-size: 11px;
+    background: rgba(34,211,238,.1); color: var(--accent); border-radius: 999px;
+    margin-bottom: 8px;
+  }
+  .skeleton { color: var(--muted); font-style: italic; }
+
+  /* GRID SECTIONS */
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 800px) { .grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 540px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 20px;
+    transition: transform .15s ease, border-color .15s ease;
+  }
+  .card:hover { transform: translateY(-2px); border-color: rgba(99,102,241,.5); }
+  .card .icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin-bottom: 12px; color: #fff;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 16px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  /* ARCH */
+  .arch {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 24px; overflow: auto;
+  }
+  .arch-grid {
+    display: grid; gap: 14px;
+    grid-template-columns: 1fr 1fr 1fr; align-items: stretch;
+  }
+  @media (max-width: 760px) { .arch-grid { grid-template-columns: 1fr; } }
+  .layer {
+    background: #0a112a; border: 1px dashed var(--line);
+    border-radius: 12px; padding: 14px;
+  }
+  .layer h4 { margin: 0 0 10px; font-size: 13px; color: var(--accent); letter-spacing: .04em; text-transform: uppercase; }
+  .chip {
+    display: inline-block; background: #11193a; border: 1px solid var(--line);
+    color: var(--text); border-radius: 999px;
+    padding: 4px 10px; font-size: 12px; margin: 3px 4px 0 0;
+  }
+
+  /* STACK */
+  .stack { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stack .badge { font-size: 13px; padding: 8px 12px; }
+
+  /* STEPS */
+  .steps { counter-reset: s; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 800px) { .steps { grid-template-columns: 1fr 1fr; } }
+  .step {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px; position: relative;
+  }
+  .step::before {
+    counter-increment: s; content: "0" counter(s);
+    position: absolute; top: 12px; right: 14px;
+    color: rgba(139,92,246,.6); font-weight: 700; font-size: 14px;
+  }
+  .step h4 { margin: 0 0 6px; font-size: 14px; color: #fff; }
+  .step p { margin: 0; color: var(--muted); font-size: 13px; }
+
+  footer {
+    border-top: 1px solid var(--line); padding: 24px 20px; text-align: center;
+    color: var(--muted); font-size: 13px;
+  }
+
+  code { background: #060a1a; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #c4b5fd; }
+  kbd { background: #0a112a; border: 1px solid var(--line); padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="brand">
+      <div class="logo"></div>
+      Prompt Orchestrator
+    </div>
+    <div>
+      <a href="#features">Features</a>
+      <a href="#demo">Live Demo</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#stack">Stack</a>
+      <a class="cta" href="#demo">Try it</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div>
+    <span class="pill">100% free stack</span>
+    <h1>Turn rough ideas into perfectly engineered prompts.</h1>
+    <p>
+      Prompt Orchestrator detects your intent, asks the right clarification
+      questions, and rebuilds your prompt — formatted for ChatGPT, Claude,
+      Copilot, or any model. Multi-tenant SaaS. Browser extension included.
+    </p>
+    <div class="badges">
+      <span class="badge">Next.js 14</span>
+      <span class="badge">Supabase + RLS</span>
+      <span class="badge">Ollama (Llama 3 / Mistral / Phi-3)</span>
+      <span class="badge">Vercel</span>
+      <span class="badge">Chrome MV3</span>
+    </div>
+    <div class="cta-row">
+      <button class="btn btn-primary" onclick="document.getElementById('demo').scrollIntoView({behavior:'smooth'})">▶ Run the demo</button>
+      <a class="btn btn-ghost" href="https://github.com/ahmadzayan-hub/desktop-tutorial">View source</a>
+    </div>
+  </div>
+
+  <div class="mock" aria-hidden="true">
+    <div class="mock-head"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+    <span class="step-tag">▸ /workspace</span>
+    <textarea readonly>write a tweet about coffee that converts</textarea>
+    <div class="row">
+      <div class="grow"></div>
+      <select><option>ChatGPT</option><option>Claude</option><option>Copilot</option></select>
+      <button class="btn btn-primary">Start</button>
+    </div>
+    <div class="qa-list">
+      <div class="qa">
+        <label>Who is the target audience?</label>
+        <div class="why">Tone, vocabulary, and emoji density depend on it.</div>
+      </div>
+      <div class="qa">
+        <label>What action should the tweet drive?</label>
+        <div class="why">Click, reply, follow, or sale — each needs a different hook.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <span class="pill">What it does</span>
+  <h2>Six engines, one workflow.</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="icon">⚡</div>
+      <h3>Intent Detection</h3>
+      <p>Classifies prompts into coding, writing, research, analysis, planning, creative, conversation.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🔎</div>
+      <h3>Gap Analysis</h3>
+      <p>Rule-based heuristics + LLM reasoning find the 3–6 missing details that matter most.</p>
+    </div>
+    <div class="card">
+      <div class="icon">❓</div>
+      <h3>Clarification Q&A</h3>
+      <p>Generates concise, friendly questions ranked by impact. Captures answers in a session.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🧠</div>
+      <h3>Prompt Reconstruction</h3>
+      <p>Rebuilds a structured prompt: CONTEXT, OBJECTIVE, CONSTRAINTS, FORMAT, SUCCESS CRITERIA.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🎯</div>
+      <h3>Model Formatter</h3>
+      <p>Adapts output to ChatGPT (numbered steps), Claude (XML tags), Copilot (code-comment intent).</p>
+    </div>
+    <div class="card">
+      <div class="icon">🧩</div>
+      <h3>Browser Extension</h3>
+      <p>Manifest V3. Injects an Enhance button on ChatGPT, Claude, Copilot, Gemini.</p>
+    </div>
+  </div>
+</section>
+
+<section id="demo">
+  <span class="pill">Interactive demo</span>
+  <h2>Try the full flow.</h2>
+  <p class="muted">Mocked AI responses for offline demo. Drop a prompt → answer 3 questions → copy the rebuilt prompt.</p>
+
+  <div class="mock" style="margin-top:18px">
+    <div id="step-1">
+      <span class="step-tag">Step 1 — Raw prompt</span>
+      <textarea id="raw" placeholder="e.g. Help me refactor my React data table to be faster">write a tweet about coffee that converts</textarea>
+      <div class="row">
+        <label class="muted" style="font-size:13px">Target:</label>
+        <select id="model">
+          <option value="generic">Generic</option>
+          <option value="chatgpt" selected>ChatGPT</option>
+          <option value="claude">Claude</option>
+          <option value="copilot">Copilot</option>
+        </select>
+        <div class="grow"></div>
+        <button class="btn btn-primary" onclick="goStep2()">Detect intent &amp; ask</button>
+      </div>
+    </div>
+
+    <div id="step-2" style="display:none">
+      <span class="step-tag">Step 2 — Clarifications</span>
+      <p class="muted" style="margin:0 0 6px;font-size:13px">Detected intent: <strong id="intent">writing</strong> · <span id="conf">92%</span> confidence</p>
+      <div id="qa" class="qa-list"></div>
+      <div class="row">
+        <button class="btn btn-ghost" onclick="back1()">Back</button>
+        <div class="grow"></div>
+        <button class="btn btn-primary" onclick="goStep3()">Generate final prompt</button>
+      </div>
+    </div>
+
+    <div id="step-3" style="display:none">
+      <span class="step-tag">Step 3 — Final prompt</span>
+      <pre id="finalPrompt"></pre>
+      <div class="row">
+        <button class="btn btn-ghost" onclick="back2()">Back</button>
+        <div class="grow"></div>
+        <button class="btn btn-ghost" id="copyBtn" onclick="copyFinal()">Copy</button>
+        <button class="btn btn-primary" onclick="reset()">Start over</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="architecture">
+  <span class="pill">How it's built</span>
+  <h2>Zero-cost, three-tier architecture.</h2>
+  <div class="arch">
+    <div class="arch-grid">
+      <div class="layer">
+        <h4>Client</h4>
+        <span class="chip">Next.js 14 App Router</span>
+        <span class="chip">Tailwind</span>
+        <span class="chip">Supabase Auth (magic link)</span>
+        <span class="chip">Chrome Extension (MV3)</span>
+      </div>
+      <div class="layer">
+        <h4>Core Logic</h4>
+        <span class="chip">Orchestration Engine</span>
+        <span class="chip">Clarification Engine</span>
+        <span class="chip">Template Engine</span>
+        <span class="chip">Model Formatter</span>
+        <span class="chip">Ollama (Llama 3 / Mistral / Phi-3)</span>
+      </div>
+      <div class="layer">
+        <h4>Data</h4>
+        <span class="chip">Postgres + RLS</span>
+        <span class="chip">organizations · memberships</span>
+        <span class="chip">sessions · questions · answers</span>
+        <span class="chip">templates · prompt_versions</span>
+        <span class="chip">api_keys</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="stack">
+  <span class="pill">Free tier all the way</span>
+  <h2>The stack.</h2>
+  <div class="stack" style="margin-top:14px">
+    <span class="badge">▲ Next.js 14 (App Router, RSC, API routes)</span>
+    <span class="badge">⚡ Supabase (Postgres, Auth, RLS, Storage)</span>
+    <span class="badge">🦙 Ollama (local LLMs, JSON mode)</span>
+    <span class="badge">▲ Vercel (free hosting + CI)</span>
+    <span class="badge">🌐 Chrome MV3 extension</span>
+    <span class="badge">🧩 Tailwind CSS</span>
+    <span class="badge">🛡 Zod validation</span>
+    <span class="badge">🔐 Row-Level Security on org_id</span>
+  </div>
+</section>
+
+<section>
+  <span class="pill">Deploy</span>
+  <h2>From repo to live URL in 4 steps.</h2>
+  <div class="steps">
+    <div class="step">
+      <h4>Supabase</h4>
+      <p>Create a free project, run <code>0001_init.sql</code>, copy URL + keys.</p>
+    </div>
+    <div class="step">
+      <h4>Ollama</h4>
+      <p><code>ollama pull llama3 mistral phi3</code> &amp; <code>ollama serve</code>. Free Cloudflare tunnel exposes it.</p>
+    </div>
+    <div class="step">
+      <h4>Vercel</h4>
+      <p>Import the GitHub repo, paste 9 env vars, click Deploy.</p>
+    </div>
+    <div class="step">
+      <h4>Extension</h4>
+      <p>Load <code>extension/</code> unpacked in Chrome. Set API URL + key in Options.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Prompt Orchestrator · 100% free stack · MIT-style.
+</footer>
+
+<script>
+  // ---- Mocked engine for the offline demo ----
+  const SAMPLES = {
+    "default": {
+      intent: "writing",
+      conf: 0.92,
+      questions: [
+        { q: "Who is the target audience?", why: "Tone, vocabulary, and emoji density depend on it." },
+        { q: "What action should the tweet drive?", why: "Click, reply, follow, or sale — each needs a different hook." },
+        { q: "Any constraint on length, tone, or hashtags?", why: "Twitter limits + brand voice." }
+      ],
+      build: (raw, model, answers) => {
+        const sections = {
+          chatgpt: `You are an expert social-media copywriter.
+
+CONTEXT
+- Original brief: ${raw}
+- Audience: ${answers[0] || "[unspecified]"}
+- Goal action: ${answers[1] || "[unspecified]"}
+- Constraints: ${answers[2] || "[unspecified]"}
+
+OBJECTIVE
+Write a single tweet (≤ 280 chars) that drives the chosen action.
+
+FORMAT
+1. The tweet, on one line.
+2. A 1-sentence rationale.
+
+SUCCESS CRITERIA
+- Hook in the first 7 words
+- Specific, concrete language
+- Exactly one CTA aligned with the goal action`,
+          claude: `<context>
+Original brief: ${raw}
+Audience: ${answers[0] || "[unspecified]"}
+Goal action: ${answers[1] || "[unspecified]"}
+Constraints: ${answers[2] || "[unspecified]"}
+</context>
+
+<task>
+Write a single tweet (≤ 280 chars) that drives the chosen action.
+</task>
+
+<format>
+1. The tweet on one line.
+2. A 1-sentence rationale.
+</format>
+
+<success_criteria>
+- Hook in first 7 words
+- Concrete, specific language
+- Exactly one CTA
+</success_criteria>`,
+          copilot: `// Intent: write a high-converting tweet about coffee
+// Audience: ${answers[0] || "[unspecified]"}
+// Goal action: ${answers[1] || "[unspecified]"}
+// Constraints: ${answers[2] || "[unspecified]"}
+// Output: 1 tweet (<=280 chars) + 1-line rationale`,
+          generic: `# Objective
+${raw}
+
+# Audience
+${answers[0] || "[unspecified]"}
+
+# Goal action
+${answers[1] || "[unspecified]"}
+
+# Constraints
+${answers[2] || "[unspecified]"}
+
+# Output format
+- Tweet on a single line, ≤ 280 chars
+- 1-sentence rationale`
+        };
+        return sections[model] || sections.generic;
+      }
+    }
+  };
+
+  function goStep2() {
+    const raw = document.getElementById('raw').value.trim();
+    if (raw.length < 3) return;
+    const data = SAMPLES.default;
+    document.getElementById('intent').textContent = data.intent;
+    document.getElementById('conf').textContent = Math.round(data.conf*100) + "%";
+    const list = document.getElementById('qa');
+    list.innerHTML = "";
+    data.questions.forEach((q, i) => {
+      const div = document.createElement('div');
+      div.className = 'qa';
+      div.innerHTML = `
+        <label>${q.q}</label>
+        <div class="why">${q.why}</div>
+        <input data-i="${i}" placeholder="Your answer…" />
+      `;
+      list.appendChild(div);
+    });
+    document.getElementById('step-1').style.display = "none";
+    document.getElementById('step-2').style.display = "block";
+  }
+  function back1() {
+    document.getElementById('step-1').style.display = "block";
+    document.getElementById('step-2').style.display = "none";
+  }
+  function back2() {
+    document.getElementById('step-2').style.display = "block";
+    document.getElementById('step-3').style.display = "none";
+  }
+  function goStep3() {
+    const raw = document.getElementById('raw').value.trim();
+    const model = document.getElementById('model').value;
+    const answers = Array.from(document.querySelectorAll('#qa input')).map(i => i.value.trim());
+    const data = SAMPLES.default;
+    const final = data.build(raw, model, answers);
+    document.getElementById('finalPrompt').textContent = final;
+    document.getElementById('step-2').style.display = "none";
+    document.getElementById('step-3').style.display = "block";
+  }
+  function copyFinal() {
+    const t = document.getElementById('finalPrompt').textContent;
+    navigator.clipboard.writeText(t).then(() => {
+      const b = document.getElementById('copyBtn');
+      const old = b.textContent; b.textContent = "Copied!";
+      setTimeout(() => b.textContent = old, 1200);
+    });
+  }
+  function reset() {
+    document.getElementById('step-3').style.display = "none";
+    document.getElementById('step-1').style.display = "block";
+  }
+</script>
+
+</body>
+</html>
