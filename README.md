@@ -4,6 +4,8 @@
 
 **Turn source material into a presentation you can explain, edit and review.**
 
+<p align="center"><img src="docs/assets/hero.jpg" alt="Concept image (AI-generated). Not a product screenshot." width="100%"><br><sub><em>Concept image (AI-generated). Not a product screenshot.</em></sub></p>
+
 Pitchora brings storyboarding, brand kits, bilingual slide composition and
 editable PowerPoint export into one workspace. It is for people preparing a
 board, committee or client presentation who need to inspect what supports the
