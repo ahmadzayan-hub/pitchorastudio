@@ -1,3 +1,7 @@
+ > **Moved:** This repository is superseded by [ahmadzayan-hub/pitchora-studio](https://github.com/ahmadzayan-hub/pitchora-studio). Development continues there.
+>
+> **تم النقل:** هذا المستودع استُبدل بالمستودع الرسمي [pitchora-studio](https://github.com/ahmadzayan-hub/pitchora-studio). ويستمر التطوير هناك.
+
 <img src="src/app/presentiq/icon.svg" alt="Existing Pitchora presentation mark" width="76" height="76">
 
 # Pitchora
